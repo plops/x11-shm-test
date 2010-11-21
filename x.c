@@ -7,37 +7,14 @@
 // martin@hop:~/v1114$ w3m mit-shm.html 
 
 int
-bgra2rgb(int c)
-{
-  switch(c){
-  case 0: return 2;
-  case 1: return 1;
-  case 2: return 0;
-  }
-}
-
-int
 main()
 {
-  int width=640;
-  int height=480;
+  int width=1366;
+  int height=768;
   
   Display *d=XOpenDisplay(0);
   int s=DefaultScreen(d);
-  // Window w=XCreateSimpleWindow(d, //0x200000e 
-  //			       RootWindow(d,s)
-  //			       ,0,0,width/10,height/10,0,0,0);
-  
-  /* XVisualInfo h;  */
-  /* int num; */
-  /* h.visualid=XVisualIDFromVisual(DefaultVisual(d,s)); */
-  /* XVisualInfo v=XGetVisualInfo(d,VisualIDMask,&h,&num); */
-  
-  //Colormap cm=DefaultColormap(d,s);
-  
-  //XMapWindow(d,w);
-
-
+  /*
   printf("%d\n",XShmQueryExtension(d));
   
   {
@@ -45,8 +22,9 @@ main()
     Bool pixmaps;
     int ret=XShmQueryVersion(d,&major,&minor,&pixmaps);
     printf("r %d maj %d min %d pix %d\n",ret,major,minor,pixmaps);
-  }
-
+    }
+  */
+  
   XShmSegmentInfo shminfo;
   XImage *image=XShmCreateImage(d,DefaultVisual(d,s),
 				DefaultDepth(d,s),
@@ -67,30 +45,17 @@ main()
   printf("at %d\n",XShmAttach(d,&shminfo));
   int i;
 
-  FILE*f=fopen("o.bgra","w");
+  FILE*f=fopen("/dev/shm/o.bgra","w");
   // 1000 640x480 frames in 1.5s
   for(i=0;i<1000;i++){
-    XShmGetImage(d,RootWindow(d,s),image,0,0,0xffffff);
+  XShmGetImage(d,RootWindow(d,s),image,0,0,0xffffff);
     fwrite(image->data,width*height*4,1,f);
     usleep(32000);
   }
   fclose(f);
+
   // encode using
   // x264 --input-res 640x480 --input-csp bgra -o o.264 o.bgra
-
-  //sleep(3);
-
-  /* unsigned char buf[width*height*3]; */
-  /* int i,j,c; */
-  /* for(j=0;j<height;j++) */
-  /*   for(i=0;i<width;i++) */
-  /*     for(c=0;c<3;c++) */
-  /* 	buf[3*(i+j*width)+c]=image->data[4*(i+j*width)+bgra2rgb(c)]; */
-  
-  /* FILE*f=fopen("o.pgm","w"); */
-  /* fprintf(f,"P6 %d %d 255\n",width,height); */
-  /* fwrite(buf,sizeof(buf),1,f); */
-  /* fclose(f); */
 
   XShmDetach(d,&shminfo);
   XDestroyImage(image);
